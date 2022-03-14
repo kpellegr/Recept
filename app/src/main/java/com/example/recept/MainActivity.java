@@ -2,6 +2,7 @@ package com.example.recept;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,7 +17,7 @@ public class MainActivity extends AppCompatActivity {
     int amount_of_people = 1;
 
     // Variabelen om de knoppen en de TextView met aantal personen vast te houden
-    Button plus_btn, minus_btn;
+    Button plus_btn, minus_btn, share_btn;
     TextView pers_tv;
 
     // Lijst met alle ingrediënten voor dit recept
@@ -33,6 +34,7 @@ public class MainActivity extends AppCompatActivity {
         pers_tv = findViewById(R.id.person);
         plus_btn = findViewById(R.id.btnplus);
         minus_btn = findViewById(R.id.btnmin);
+        share_btn = findViewById(R.id.btnshare);
         // We hebben ook een connectie met de layout nodig, om dynamisch TextViews toe te kunnen voegen
         ViewGroup layout = (ViewGroup) findViewById(R.id.rootlayout);
 
@@ -50,6 +52,27 @@ public class MainActivity extends AppCompatActivity {
             TextView tv = new TextView(this); // maak een nieuwe (lege) TextView aan
             layout.addView(tv, i+3);  // i+3 is de volgorde van de TextView in de UI (onder het aantal personen)
             tv_array.add(tv); // voeg de TextView toe aan de lijst met TextViews (hebben we straks nodig)
+
+            final Ingredient current_ingredient = recept_array.get(i);
+
+            // Zet een clickhandler op de textview, zodat we een nieuw scherm kunnen openen wanneer
+            // er op het ingredient geklikt wordt
+            tv.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    // We maken een intent aan om een nieuwe Activity te starten en geven
+                    // EXPLICIET mee welke klasse we willen starten (in casu DetailActivity.class)
+                    Intent intent = new Intent(MainActivity.this, DetailActivity.class);
+
+                    // We stoppen wat data in de intent (een string en een float) en we labelen
+                    // die data, zodat we ze straks terugvinden.
+                    intent.putExtra("INGREDIENT_NAME", current_ingredient.getNaam());
+                    intent.putExtra("INGREDIENT_QTY", current_ingredient.getHoeveelheidPP());
+
+                    // we lanceren de nieuwe Activity aan de hand van deze Intent
+                    startActivity(intent);
+                }
+            });
         }
 
         // Initialiseer de user-interface (zet alle basisinformatie op het scherm)
@@ -73,6 +96,28 @@ public class MainActivity extends AppCompatActivity {
                 MainActivity.this.update_ui();
             }
         });
+
+        // set een handler op de share button, om het recept te delen
+        share_btn.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View view){
+                // We maken een nieuwe intent, maar geven deze keer NIET mee welke
+                // klasse we willen starten; in plaats daarvan geven we onze intentie mee:
+                // 'ACTION_SEND': we willen iets sturen/delen via een andere app
+                Intent intent = new Intent();
+                intent.setAction(Intent.ACTION_SEND);
+
+                // we geven mee *wat* we willen delen
+                intent.putExtra(Intent.EXTRA_TEXT, "Super recept voor burrito's!");
+                intent.setType("text/plain");
+
+                // We *vragen aan Android* om op zoek te gaan naar een Activity die in staat
+                // is om onze vraag ('ACTION_SEND') te beantwoorden...
+                // Let op: dit kan falen, hier hoort eigenlijkkcode bij om fouten af te handelen!
+                startActivity(intent);
+            }
+        });
+
     }
 
     // functie om de UI te updaten met de actuele informatie

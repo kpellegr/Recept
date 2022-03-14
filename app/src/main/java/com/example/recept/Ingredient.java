@@ -30,4 +30,17 @@ public class Ingredient {
                 return String.format("%.1f %s %s", benodigd, eenheid_meervoud, naam_meervoud);
             }
         }
+
+        public String getNaam() {
+            return this.naam_enkelvoud;
+        }
+
+        public float getHoeveelheidPP() {
+            return this.hoeveelheid_pp;
+        }
+
+         public String getEenheid() {
+            return this.eenheid_enkelvoud;
+        }
+
 }
