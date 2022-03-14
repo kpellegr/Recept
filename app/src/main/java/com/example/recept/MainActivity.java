@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
 
@@ -11,116 +12,80 @@ import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
 
-    int amount = 1;
-    Button plus;
-    Button min;
-    TextView pers, bac, creme, limo, tor, kaas, ado, ajuin, toma;
+    // Variabele die het aantal personen bevat waavoor het recept berekend moet worden
+    int amount_of_people = 1;
 
-    /*ingredienten*/
-    int spek, room, limoen, tortilla, cheddar, avocado, ui, tomaat;
+    // Variabelen om de knoppen en de TextView met aantal personen vast te houden
+    Button plus_btn, minus_btn;
+    TextView pers_tv;
 
-    class Ingredient{
-        int hoeveel;
-
-        Ingredient(int h){
-            hoeveel = h;
-        }
-
-        int totaal(){
-            return amount * hoeveel;
-        }
-    }
+    // Lijst met alle ingrediënten voor dit recept
+    ArrayList<Ingredient> recept_array = new ArrayList<>();
+    // Lijst met alle TextViews die we aanmaken om de ingrediënten te tonen in de app
+    ArrayList<TextView> tv_array = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        pers = findViewById(R.id.person);
-        plus = findViewById(R.id.btnplus);
-        min = findViewById(R.id.btnmin);
-        bac = findViewById(R.id.spek);
-        creme = findViewById(R.id.room);
-        limo = findViewById(R.id.limoen);
-        tor = findViewById(R.id.tortilla);
-        kaas = findViewById(R.id.cheddar);
-        ado = findViewById(R.id.avocado);
-        ajuin = findViewById(R.id.ui);
-        toma = findViewById(R.id.tomaat);
+        // Zoek alle UI elementen op (hebben we later nodig)
+        pers_tv = findViewById(R.id.person);
+        plus_btn = findViewById(R.id.btnplus);
+        minus_btn = findViewById(R.id.btnmin);
+        // We hebben ook een connectie met de layout nodig, om dynamisch TextViews toe te kunnen voegen
+        ViewGroup layout = (ViewGroup) findViewById(R.id.rootlayout);
 
-        Ingredient i1 = new Ingredient(5);
-        Ingredient i2 = new Ingredient(200);
-        Ingredient i3 = new Ingredient(2);
-        Ingredient i4 = new Ingredient(1);
-        Ingredient i5 = new Ingredient(50);
-        Ingredient i6 = new Ingredient(1);
-        Ingredient i7 = new Ingredient(1);
-        Ingredient i8 = new Ingredient(10);
+        // We bouwen het recept op door een reeks ingrediënten aan te maken en elk ingrediënt toe te voegen aan de lijst.
+        recept_array.add(new Ingredient("zure room", "zure room", 200, "gram", "gram"));
+        recept_array.add(new Ingredient("limoen", "limoenen", 2, "", ""));
+        recept_array.add(new Ingredient("tortilla", "tortilla's", 1, "", ""));
+        recept_array.add(new Ingredient("cheddar", "cheddar", 50, "gram", "gram"));
+        recept_array.add(new Ingredient("ajuin", "ajuinen", 0.5f, "", ""));
+        recept_array.add(new Ingredient("spek", "spek", 5f, "reepje", "reepjes"));
 
-        adapt();
+        // We lussen over de ingrediëntenlijst en maken voor elk ingrediënt een TextView aan, waarin we dit ingrediënt
+        // kunnen tonen in de UI
+        for (int i = 0; i<recept_array.size(); i++) {
+            TextView tv = new TextView(this); // maak een nieuwe (lege) TextView aan
+            layout.addView(tv, i+3);  // i+3 is de volgorde van de TextView in de UI (onder het aantal personen)
+            tv_array.add(tv); // voeg de TextView toe aan de lijst met TextViews (hebben we straks nodig)
+        }
 
-        plus.setOnClickListener(new View.OnClickListener(){
+        // Initialiseer de user-interface (zet alle basisinformatie op het scherm)
+        update_ui();
+
+        // set een handler op de plus button, om het aantal mensen te verhogen
+        plus_btn.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view){
-                amount = amount + 1;
-                spek = i1.totaal();
-                room = i2.totaal();
-                limoen = i3.totaal();
-                tortilla = i4.totaal();
-                cheddar = i5.totaal();
-                avocado= i6.totaal();
-                ui = i7.totaal();
-                tomaat = i8.totaal();
-                MainActivity.this.adapt();
+                amount_of_people = amount_of_people + 1;
+                MainActivity.this.update_ui();
             }
         });
 
-        min.setOnClickListener(new View.OnClickListener(){
+        // set een handler op de min button, om het aantal mensen te verlagen
+        minus_btn.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view){
-                amount = amount - 1;
-                spek = i1.totaal();
-                room = i2.totaal();
-                limoen = i3.totaal();
-                tortilla = i4.totaal();
-                cheddar = i5.totaal();
-                avocado= i6.totaal();
-                ui = i7.totaal();
-                tomaat = i8.totaal();
-                MainActivity.this.adapt();
+                if (amount_of_people == 1) return; // niet verlagen als het aantal mensen 1 is.
+                amount_of_people = amount_of_people - 1;
+                MainActivity.this.update_ui();
             }
         });
     }
 
-    void adapt() {
-        String personen = String.format("Personen: %d", amount);
-        pers.setText(personen);
-        String bacon = String.format("%s %s", spek, " sneetjes ontbijtspek");
-        String cream = String.format("%s %s", room, "g zure room");
-        String lime = String.format("%s %s", limoen, " limoenen");
-        String tort;
-        if(tortilla > 1) {
-            tort = String.format("%s %s", tortilla, " tortilla's");
-        } else{
-            tort = String.format("%s %s", tortilla, " tortilla");
+    // functie om de UI te updaten met de actuele informatie
+    void update_ui() {
+        String personen = String.format("Personen: %d", amount_of_people);
+        pers_tv.setText(personen);
+
+        // We lussen over de lijst met ingrediënten én de corresponderende TextView en updaten
+        // de TextViews één voor één
+        for (int i = 0; i<recept_array.size(); i++) {
+            TextView tv = tv_array.get(i);  // pak de i-de TextView
+            Ingredient ing = recept_array.get(i); // pak het i-de ingrediënt
+            tv.setText(ing.toString(amount_of_people));  // converteer het ingrediënt naar text
         }
-        String cheese = String.format("%s %s", cheddar, " cheddar");
-        String avo;
-        if (avocado > 1) {
-            avo = String.format("%s %s", avocado, "avocado's");
-        } else {
-            avo = String.format("%s %s", avocado, "avocado");
-        }
-        String onion = String.format("%s %s", ui, " rode ui");
-        String tomato = String.format("%s %s", tomaat, " trostomaten");
-        bac.setText(bacon);
-        creme.setText(cream);
-        limo.setText(lime);
-        tor.setText(tort);
-        kaas.setText(cheese);
-        ado.setText(avo);
-        ajuin.setText(onion);
-        toma.setText(tomato);
-        min.setEnabled(amount > 1);
     }
 }
